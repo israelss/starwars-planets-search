@@ -3,7 +3,7 @@ import { PlanetsContext } from '../../context/PlanetsContext';
 import './Table.css';
 
 const Table = () => {
-  const { tableData } = useContext(PlanetsContext);
+  const { filteredTableData } = useContext(PlanetsContext);
 
   return (
     <table>
@@ -26,7 +26,7 @@ const Table = () => {
       </thead>
       <tbody>
         {
-          tableData.map((data) => (
+          filteredTableData.map((data) => (
             <tr key={ data.name }>
               <td>{ data.name }</td>
               <td>{ data.climate }</td>
