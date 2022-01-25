@@ -8,15 +8,34 @@ const INITIAL_FILTERS = {
   filterByName: {
     name: '',
   },
+  filterByNumericValues: [],
+};
+
+const INITIAL_OPTIONS = [
+  'population',
+  'orbital_period',
+  'diameter',
+  'rotation_period',
+  'surface_water',
+];
+
+const comparisons = {
+  'igual a': (a, b) => Number(a) === Number(b),
+  'maior que': (a, b) => Number(a) > Number(b),
+  'menor que': (a, b) => Number(a) < Number(b),
 };
 
 export const PlanetsProvider = ({ children }) => {
   const [tableData, setTableData] = useState([]);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [nameFilter, setNameFilter] = useState('');
+  const [valueFilter, setValueFilter] = useState([]);
+  const [valueFilterOptions, setValueFilterOptions] = useState(INITIAL_OPTIONS);
 
   const filterActions = {
     init: (payload) => [...payload],
     name: (payload) => {
+      setValueFilterOptions(INITIAL_OPTIONS);
       setFilters({
         ...filters,
         filterByName: {
@@ -29,11 +48,42 @@ export const PlanetsProvider = ({ children }) => {
           .includes(payload.toLowerCase()))
         : tableData;
     },
+    values: () => {
+      const newNumericFilters = [...filters.filterByNumericValues];
+      const [newColumn, newComparison, newValue] = valueFilter;
+
+      setValueFilter([]);
+      setValueFilterOptions([
+        ...valueFilterOptions
+          .filter((option) => option !== newColumn),
+      ]);
+
+      newNumericFilters.filter(({ column }) => column !== newColumn);
+      if (newColumn) {
+        newNumericFilters.push({
+          column: newColumn,
+          comparison: newComparison,
+          value: newValue,
+        });
+      }
+      setFilters({
+        ...filters,
+        filterByNumericValues: [...newNumericFilters],
+      });
+      if (newNumericFilters.length > 0) {
+        let filteredData = [...tableData];
+        newNumericFilters.forEach(({ column, comparison, value }) => {
+          filteredData = tableData
+            .filter((planet) => comparisons[comparison](planet[column], value));
+        });
+        return filteredData;
+      }
+      return tableData;
+    },
   };
   const filterReducer = (_, [type, payload]) => filterActions[type](payload);
 
   const [filteredTableData, dispatch] = useReducer(filterReducer, []);
-  const [nameFilter, setNameFilter] = useState('');
 
   const fetchTableData = async () => {
     const data = await fetchPlanetsData();
@@ -49,9 +99,15 @@ export const PlanetsProvider = ({ children }) => {
     dispatch(['name', nameFilter]);
   }, [nameFilter]);
 
+  useEffect(() => {
+    dispatch(['values']);
+  }, [valueFilter.length]);
+
   const context = {
     filteredTableData,
     setNameFilter,
+    setValueFilter,
+    valueFilterOptions,
   };
 
   return (
