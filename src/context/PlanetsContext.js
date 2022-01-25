@@ -49,15 +49,14 @@ export const PlanetsProvider = ({ children }) => {
         : tableData;
     },
     values: () => {
-      const newNumericFilters = [...filters.filterByNumericValues];
       const [newColumn, newComparison, newValue] = valueFilter;
-
       setValueFilter([]);
       setValueFilterOptions([
         ...valueFilterOptions
           .filter((option) => option !== newColumn),
       ]);
 
+      const newNumericFilters = [...filters.filterByNumericValues];
       newNumericFilters.filter(({ column }) => column !== newColumn);
       if (newColumn) {
         newNumericFilters.push({
@@ -80,7 +79,30 @@ export const PlanetsProvider = ({ children }) => {
       }
       return tableData;
     },
+    removeValue: (removedColumn) => {
+      setValueFilterOptions(Array.from(new Set([
+        ...valueFilterOptions,
+        removedColumn,
+      ])));
+      let newNumericFilters = [...filters.filterByNumericValues];
+      newNumericFilters = newNumericFilters
+        .filter(({ column }) => column !== removedColumn);
+      setFilters({
+        ...filters,
+        filterByNumericValues: [...newNumericFilters],
+      });
+      if (newNumericFilters.length > 0) {
+        let filteredData = [...tableData];
+        newNumericFilters.forEach(({ column, comparison, value }) => {
+          filteredData = tableData
+            .filter((planet) => comparisons[comparison](planet[column], value));
+        });
+        return filteredData;
+      }
+      return tableData;
+    },
   };
+
   const filterReducer = (_, [type, payload]) => filterActions[type](payload);
 
   const [filteredTableData, dispatch] = useReducer(filterReducer, []);
@@ -103,8 +125,14 @@ export const PlanetsProvider = ({ children }) => {
     dispatch(['values']);
   }, [valueFilter.length]);
 
+  const removeFilter = (column) => {
+    dispatch(['removeValue', column]);
+  };
+
   const context = {
+    activeFilters: filters.filterByNumericValues,
     filteredTableData,
+    removeFilter,
     setNameFilter,
     setValueFilter,
     valueFilterOptions,
