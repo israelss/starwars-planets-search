@@ -28,7 +28,7 @@ const Table = () => {
         {
           filteredTableData.map((data) => (
             <tr key={ data.name }>
-              <td>{ data.name }</td>
+              <td data-testid="planet-name">{ data.name }</td>
               <td>{ data.climate }</td>
               <td>{ data.created }</td>
               <td>{ data.diameter }</td>

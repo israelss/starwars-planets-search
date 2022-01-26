@@ -9,6 +9,10 @@ const INITIAL_FILTERS = {
     name: '',
   },
   filterByNumericValues: [],
+  order: {
+    column: 'population',
+    sort: 'ASC',
+  },
 };
 
 const INITIAL_OPTIONS = [
@@ -33,7 +37,9 @@ export const PlanetsProvider = ({ children }) => {
   const [valueFilterOptions, setValueFilterOptions] = useState(INITIAL_OPTIONS);
 
   const filterActions = {
-    init: (payload) => [...payload],
+    init: (payload) => [...payload]
+      .sort((a, b) => a.name.charCodeAt(0) - b.name.charCodeAt(0)),
+    sort: (payload) => [...payload],
     name: (payload) => {
       setValueFilterOptions(INITIAL_OPTIONS);
       setFilters({
@@ -129,12 +135,25 @@ export const PlanetsProvider = ({ children }) => {
     dispatch(['removeValue', column]);
   };
 
+  const sort = ([column, order]) => {
+    const sortedTableData = [...filteredTableData];
+
+    sortedTableData.sort((a, b) => {
+      const sortOrder = a[column] - b[column];
+      if (order === 'ASC') return sortOrder;
+      return -sortOrder;
+    });
+
+    dispatch(['sort', sortedTableData]);
+  };
+
   const context = {
     activeFilters: filters.filterByNumericValues,
     filteredTableData,
     removeFilter,
     setNameFilter,
     setValueFilter,
+    sort,
     valueFilterOptions,
   };
 

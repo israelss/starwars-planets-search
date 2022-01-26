@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PlanetsContext } from '../../../context/PlanetsContext';
-import Select from './Select';
+import Select from '../../Select';
 
 const ValueFilter = () => {
   const { setValueFilter, valueFilterOptions } = useContext(PlanetsContext);
